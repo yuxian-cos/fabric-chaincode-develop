@@ -43,31 +43,48 @@ peer channel update -o orderer1.cathaybc.com:7050 -c cathay -f ./channel-artifac
 #################################### Chaincode 相關 ####################################
 
 #打包
-peer lifecycle chaincode package test-chaincode.tar.gz --path /chaincode/test-chaincode --lang golang --label test-chaincode_1
+peer lifecycle chaincode package /chaincode/lucky-number_1.tar.gz --path /chaincode/lucky-number --lang golang --label lucky-number_1
 
 #安裝
-peer lifecycle chaincode install test-chaincode.tar.gz
+peer lifecycle chaincode install /chaincode/lucky-number_1.tar.gz
 
 #查看安裝
 peer lifecycle chaincode queryinstalled
 
 #批准
-peer lifecycle chaincode approveformyorg -o orderer1.cathaybc.com:7050 --channelID cathay --name test-chaincode --version 1 --init-required --package-id [Replace your package id] --sequence 1 --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
+peer lifecycle chaincode approveformyorg --channelID cathay --name lucky-number --version 1 --init-required --package-id lucky-number_1:aa839817c6a1b70de3340edee1d805d2fff393481b333ca86721914de77c60f0 --sequence 1 -o orderer1.cathaybc.com:7050 --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
 
 #查看批准狀態
-peer lifecycle chaincode checkcommitreadiness --channelID cathay --name test-chaincode --version 1 --sequence 1 --output json --init-required
+peer lifecycle chaincode checkcommitreadiness --channelID cathay --name lucky-number --version 1 --sequence 1 --output json --init-required
 
 #提交
-peer lifecycle chaincode commit -o orderer1.cathaybc.com:7050 --channelID cathay --name test-chaincode --version 1 --sequence 1 --init-required --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
+peer lifecycle chaincode commit -o orderer1.cathaybc.com:7050 --channelID cathay --name lucky-number --version 1 --sequence 1 --init-required --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
 
 #查看提交
-peer lifecycle chaincode querycommitted --channelID cathay --name test-chaincode
+peer lifecycle chaincode querycommitted --channelID cathay --name lucky-number
 
 #初始化
-peer chaincode invoke -o orderer1.cathaybc.com:7050 -C cathay -n test-chaincode --isInit -c '{"function":"Init","Args":[]}' --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
+peer chaincode invoke -o orderer1.cathaybc.com:7050 -C cathay -n lucky-number --isInit -c '{"function":"Init","Args":[]}' --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
 
 #Query example
-peer chaincode query -o orderer1.cathaybc.com:7050 -C cathay -n test-chaincode -c '{"function":"QueryFunction1","Args":[]}' --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
+peer chaincode query -o orderer1.cathaybc.com:7050 -C cathay -n lucky-number -c '{"function":"GetLuckyNumber","Args":[]}' --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
 
 #Invoke example
-peer chaincode invoke -o orderer1.cathaybc.com:7050 -C cathay -n test-chaincode -c '{"function":"InvokeFunction1","Args":[]}' --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
+peer chaincode invoke -o orderer1.cathaybc.com:7050 -C cathay -n lucky-number -c '{"function":"SetLuckyNumber","Args":["{\"value\": 87}"]}' --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
+
+#################################### 更新 Chaincode ####################################
+
+#打包
+peer lifecycle chaincode package /chaincode/lucky-number_2.tar.gz --path /chaincode/lucky-number --lang golang --label lucky-number_2
+
+#安裝
+peer lifecycle chaincode install /chaincode/lucky-number_2.tar.gz
+
+#批准
+peer lifecycle chaincode approveformyorg --channelID cathay --name lucky-number --version 2 --init-required --package-id lucky-number_2:0af333fe4bfbc5745335fc017171133af160b94799b99eab9072d0c843c83858 --sequence 2 -o orderer1.cathaybc.com:7050 --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
+
+#提交
+peer lifecycle chaincode commit -o orderer1.cathaybc.com:7050 --channelID cathay --name lucky-number --version 2 --sequence 2 --init-required --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
+
+#初始化
+peer chaincode invoke -o orderer1.cathaybc.com:7050 -C cathay -n lucky-number --isInit -c '{"function":"Init","Args":[]}' --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
