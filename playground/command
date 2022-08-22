@@ -5,6 +5,7 @@ cryptogen generate --config=./config/crypto-config-orderer.yaml --output=./crypt
 
 #產生peer憑證
 cryptogen generate --config=./config/crypto-config-org1.yaml --output=./crypto-config
+cryptogen generate --config=./config/crypto-config-org2.yaml --output=./crypto-config
 
 #產生創世區塊
 configtxgen -configPath ./config -profile OrderersGenesis -channelID system-channel -outputBlock ./system-genesis-block/genesis.block
@@ -14,12 +15,20 @@ configtxgen -configPath ./config -profile OrgsChannel -outputCreateChannelTx ./c
 
 #產生update anchor peer文件
 configtxgen -configPath ./config -profile OrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/org1Anchors.tx -channelID cathay -asOrg Org1MSP
+configtxgen -configPath ./config -profile OrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/org2Anchors.tx -channelID cathay -asOrg Org2MSP
+
+#啟動 docker yaml
+docker-compose -f ./docker/orderer1-docker-compose.yaml up -d
+docker-compose -f ./docker/org1-peer1-docker-compose.yaml up -d
+docker-compose -f ./docker/org2-peer1-docker-compose.yaml up -d
 
 #進入docker container
 docker exec -it peer1.org1.cathaybc.com sh
+docker exec -it peer1.org2.cathaybc.com sh
 
 #設定使用admin憑證
 export CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/crypto-config/peerOrganizations/org1.cathaybc.com/users/Admin@org1.cathaybc.com/msp/
+export CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/crypto-config/peerOrganizations/org2.cathaybc.com/users/Admin@org2.cathaybc.com/msp/
 
 #建立channel
 peer channel create -o orderer1.cathaybc.com:7050 -c cathay -f ./channel-artifacts/cathay.tx --outputBlock ./channel-artifacts/cathay.block --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
@@ -29,6 +38,7 @@ peer channel join -b ./channel-artifacts/cathay.block
 
 #更新anchor peer
 peer channel update -o orderer1.cathaybc.com:7050 -c cathay -f ./channel-artifacts/org1Anchors.tx --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
+peer channel update -o orderer1.cathaybc.com:7050 -c cathay -f ./channel-artifacts/org2Anchors.tx --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
 
 #################################### Chaincode 相關 ####################################
 
@@ -45,7 +55,7 @@ peer lifecycle chaincode queryinstalled
 peer lifecycle chaincode approveformyorg -o orderer1.cathaybc.com:7050 --channelID cathay --name test-chaincode --version 1 --init-required --package-id [Replace your package id] --sequence 1 --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
 
 #查看批准狀態
-peer lifecycle chaincode checkcommitreadiness --channelID cathay --name test-chaincode --version 1 --sequence 2 --output json --init-required
+peer lifecycle chaincode checkcommitreadiness --channelID cathay --name test-chaincode --version 1 --sequence 1 --output json --init-required
 
 #提交
 peer lifecycle chaincode commit -o orderer1.cathaybc.com:7050 --channelID cathay --name test-chaincode --version 1 --sequence 1 --init-required --tls --cafile ./crypto-config/ordererOrganizations/cathaybc.com/orderers/orderer1.cathaybc.com/tls/ca.crt
